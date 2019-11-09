@@ -80,3 +80,151 @@ fun main(args: Array<String>) {
     }
 }
 ```
+
+### 클래스
+
+```kotlin
+class Person(val name: String)
+```
+- 코틀린의 기본 가시성은 public이므로 생략할 수 있다.
+ 
+### 프로퍼티
+
+```kotlin
+class Person(
+	val name: String,		// 읽기 전용 프로퍼티
+	var isMarried: Boolean	// 변경 가능한 프로퍼티
+)
+```
+
+- 기본적으로 코틀린에서 프로퍼티를 선언하는 방식은 프로퍼티와 관련 있는 접근자를 선언하는 것이다.
+- 읽기 전용 프로퍼티의 경우, getter만 선언 / 변경 가능한 프로퍼티의 경우, getter와 setter를 모두 선언
+
+```kotlin
+val person = Person("Hyukjae", false)
+println(person.name)	// Hyukjae
+person.isMarried = true
+println(person.isMarried)	// true
+```
+
+### 커스텀 접근자
+
+```kotlin
+class Rectangle(val height: Int, val width: Int) {
+	val isSquare: Boolean
+		get() {
+			return height == width
+		}
+}
+```
+
+또는
+
+```kotlin
+class Rectangle(val height: Int, val width: Int) {
+	val isSquare: Boolean
+		get() = height == width
+}
+```
+
+- 클라이언트가 프로퍼티에 접근할 때마다 getter가 프로퍼티 값을 매번 계산한다.
+
+```kotlin
+val rectangle = Rectangle(10, 20)
+println(rectangle.isSquare)		// false
+```
+
+- 파라미터가 없는 함수를 정의하는 방식과 커스텀 getter를 정의하는 방식의 차이는 가독성 뿐이다. (성능 차이 없음)
+
+### enum 클래스
+
+```kotlin
+enum class Color {
+	RED, GREEN, BLUE
+}
+```
+
+- 코틀린에서 enum은 soft keyword라 부르는 존재다.
+- enum은 class 앞에 있을 때만 특별한 의미를 지닌다. 다른 부분에서는 이름에 사용할 수 있다.
+
+```kotlin
+enum class Color (
+	// 상수의 프로퍼티 정의
+	val r: Int, 
+	val g: Int, 
+	val b: Int
+) {
+	RED(255, 0, 0),
+	GREEN(0, 255, 0),
+	BLUE(0, 0, 255);
+	
+	fun rgb() = (r * 256 + g) * 256 + b
+}
+```
+```kotlin
+println(Color.BLUE.rgb())		// 255
+```
+
+- enum 클래스 안에 메소드를 정의하는 경우 반드시 상수 목록과 메소드 정의 사이에 세미콜론을 넣어야 한다.
+
+
+### when으로 enum 클래스 다루기
+
+- switch에 해당하는 코틀린 구성 요소는 when이다.
+- if와 마찬가지로 값을 만들어내는 식이다.
+
+```kotlin
+fun getMnemonic(color: Color) =
+	when (color) {
+		Color.RED -> "Richard"
+		Color.GREEN -> "Gave"
+		Color.BLUE -> "Battle"
+	}
+```
+```kotlin
+println(getMnemonic(Color.BLUE))		// Battle
+```
+
+- 한 분기 안에서 여러 값을 매치 패턴으로 사용할 수도 있다. 값 사이를 콤마(,)로 분리한다.
+
+```kotlin
+fun getWarmth(color: Color) = 
+	when(color) {
+		Color.RED, Color.ORANGE, Color.YELLOW -> "warm"
+		Color.GREEN -> "neutral"
+		Color.BLUE, Color.VIOLET -> "cold"
+	}
+```
+```kotlin
+println(getWarmth(Color.ORANGE))		// warm
+```
+
+- 상수 값을 임포트하면 코드를 더 간단하게 만들 수 있다.
+
+```kotlin
+import study.colors.Color		// 다른 패키지에서 정의한 Color 클래스를 임포트
+import study.colors.Color.*	// 짧은 이름으로 사용하기 위해 enum 상수를 모두 임포트
+		
+fun getWarmth(color: Color) = 
+	when(color) {
+		RED, ORANGE, YELLOW -> "warm"
+		GREEN -> "neutral"
+		BLUE, VIOLET -> "cold"
+	}
+```
+
+### when과 임의의 객체를 함께 사용
+
+- 분기 조건에 임의의 객체를 사용할 수 있다.
+
+```kotlin
+fun mix(c1: Color, c2: Color) =
+	when (setOf(c1, c2)) {				// when 식의 인자로 아무 객체나 사용할 수 있다. 인자로 받은 객체가 각 분기 조건에 있는 객체와 같은지 테스트한다.
+		setOf(RED, YELLOW) -> ORANGE
+		setOf(YELLOW, BLUE) -> GREEN
+		setOf(BLUE, VILOET) -> INDIGO
+		else -> throw Exception("Dirty color")
+	}
+```
+
+- 코틀린 표준 라이브러리에는 인자로 전달받은 여러 객체를 그 객체들을 포함하는 집합인 Set 객체로 만드는 setOf라는 함수가 있다.
